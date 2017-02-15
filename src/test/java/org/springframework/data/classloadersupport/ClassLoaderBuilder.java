@@ -17,8 +17,11 @@ package org.springframework.data.classloadersupport;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import org.mockito.Mockito;
+import org.springframework.core.type.AnnotationMetadata;
 
 /**
  * is a builder for constructing instances loaded by a {@link FilteringClassLoader}.
@@ -28,7 +31,9 @@ import org.mockito.Mockito;
 public class ClassLoaderBuilder<S> {
 
 	private final Class<S> classToLoad;
-	private String hidden;
+	private String hidden = "nothingHidden";
+	private final List<String> excludedClassNames = new ArrayList<String>();
+	private FilteringClassLoader classLoader;
 
 	public static <S> ClassLoaderBuilder<S> load(Class<S> classToLoad) {
 		return new ClassLoaderBuilder<S>(classToLoad);
@@ -46,7 +51,7 @@ public class ClassLoaderBuilder<S> {
 
 	public <T> T run(Object owner, Callable<T> callable) {
 		try {
-			FilteringClassLoader classLoader = new FilteringClassLoader(hidden);
+			FilteringClassLoader classLoader = createClassLoader();
 			classLoader.excludeClass(owner.getClass().getName());
 
 			Class<?> callableClass = classLoader.loadClass(callable.getClass().getName());
@@ -66,7 +71,7 @@ public class ClassLoaderBuilder<S> {
 
 	public S create() {
 		try {
-			FilteringClassLoader classLoader = new FilteringClassLoader(hidden);
+			FilteringClassLoader classLoader = createClassLoader();
 			Class<?> loadedClass = classLoader.loadClass(classToLoad.getName());
 			Constructor<?> constructor = loadedClass.getDeclaredConstructor();
 			constructor.setAccessible(true);
@@ -77,5 +82,22 @@ public class ClassLoaderBuilder<S> {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public ClassLoaderBuilder<S> exclude(Class<?> classNotToShadow) {
+		excludedClassNames.add(classNotToShadow.getName());
+		return this;
+	}
+
+	private FilteringClassLoader createClassLoader() {
+		classLoader = new FilteringClassLoader(hidden);
+		for (String excludedClassName : excludedClassNames) {
+			classLoader.excludeClass(excludedClassName);
+		}
+		return classLoader;
+	}
+
+	public ClassLoader getClassLoader() {
+		return classLoader;
 	}
 }
