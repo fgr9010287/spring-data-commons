@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ import org.springframework.util.StringUtils;
  * @author Dirk Mahler
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 public abstract class CdiRepositoryBean<T> implements Bean<T>, PassivationCapable {
 
@@ -107,7 +108,7 @@ public abstract class CdiRepositoryBean<T> implements Bean<T>, PassivationCapabl
 	 * @param repositoryType must not be {@literal null}.
 	 * @return
 	 */
-	private final String createPassivationId(Set<Annotation> qualifiers, Class<?> repositoryType) {
+	private String createPassivationId(Set<Annotation> qualifiers, Class<?> repositoryType) {
 
 		List<String> qualifierNames = new ArrayList<>(qualifiers.size());
 
@@ -117,10 +118,7 @@ public abstract class CdiRepositoryBean<T> implements Bean<T>, PassivationCapabl
 
 		Collections.sort(qualifierNames);
 
-		StringBuilder builder = new StringBuilder(StringUtils.collectionToDelimitedString(qualifierNames, ":"));
-		builder.append(":").append(repositoryType.getName());
-
-		return builder.toString();
+		return StringUtils.collectionToDelimitedString(qualifierNames, ":") + ":" + repositoryType.getName();
 	}
 
 	/*
@@ -298,7 +296,7 @@ public abstract class CdiRepositoryBean<T> implements Bean<T>, PassivationCapabl
 	public Set<Class<? extends Annotation>> getStereotypes() {
 
 		return Arrays.stream(repositoryType.getAnnotations())//
-				.map(it -> it.annotationType())//
+				.map(Annotation::annotationType)//
 				.filter(it -> it.isAnnotationPresent(Stereotype.class))//
 				.collect(Collectors.toSet());
 	}
@@ -358,7 +356,7 @@ public abstract class CdiRepositoryBean<T> implements Bean<T>, PassivationCapabl
 	 * @param repositoryType will never be {@literal null}.
 	 * @return
 	 */
-	private final T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {
+	private T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {
 
 		Optional<Bean<?>> customImplementationBean = getCustomImplementationBean(repositoryType, beanManager, qualifiers);
 		Optional<Object> customImplementation = customImplementationBean

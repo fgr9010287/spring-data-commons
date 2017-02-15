@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.springframework.util.Assert;
  * Builder to create {@link BeanDefinitionBuilder} instance to eventually create Spring Data repository instances.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 class RepositoryBeanDefinitionBuilder {
 
@@ -94,7 +95,7 @@ class RepositoryBeanDefinitionBuilder {
 
 		NamedQueriesBeanDefinitionBuilder definitionBuilder = new NamedQueriesBeanDefinitionBuilder(
 				extension.getDefaultNamedQueryLocation());
-		configuration.getNamedQueriesLocation().ifPresent(it -> definitionBuilder.setLocations(it));
+		configuration.getNamedQueriesLocation().ifPresent(definitionBuilder::setLocations);
 
 		builder.addPropertyValue("namedQueries", definitionBuilder.build(configuration.getSource()));
 

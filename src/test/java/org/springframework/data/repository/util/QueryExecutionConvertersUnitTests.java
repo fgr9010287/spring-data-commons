@@ -165,7 +165,7 @@ public class QueryExecutionConvertersUnitTests {
 	@Test // DATACMNS-795
 	@SuppressWarnings("unchecked")
 	public void turnsNullIntoScalaOptionEmpty() {
-		assertThat(conversionService.convert(new NullableWrapper(null), Option.class)).isEqualTo(Option.<Object> empty());
+		assertThat(conversionService.convert(new NullableWrapper(null), Option.class)).isEqualTo(Option.empty());
 	}
 
 	@Test // DATACMNS-795

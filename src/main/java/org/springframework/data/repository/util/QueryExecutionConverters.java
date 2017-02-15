@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2014-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,6 +55,7 @@ import com.google.common.base.Optional;
  * 
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 1.8
  * @see ReactiveWrappers
  */
@@ -69,9 +70,9 @@ public abstract class QueryExecutionConverters {
 	private static final boolean JAVASLANG_PRESENT = ClassUtils.isPresent("javaslang.control.Option",
 			QueryExecutionConverters.class.getClassLoader());
 
-	private static final Set<Class<?>> WRAPPER_TYPES = new HashSet<Class<?>>();
-	private static final Set<Class<?>> UNWRAPPER_TYPES = new HashSet<Class<?>>();
-	private static final Set<Converter<Object, Object>> UNWRAPPERS = new HashSet<Converter<Object, Object>>();
+	private static final Set<Class<?>> WRAPPER_TYPES = new HashSet<>();
+	private static final Set<Class<?>> UNWRAPPER_TYPES = new HashSet<>();
+	private static final Set<Converter<Object, Object>> UNWRAPPERS = new HashSet<>();
 
 	static {
 

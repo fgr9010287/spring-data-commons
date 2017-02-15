@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 by the original author(s).
+ * Copyright 2011-2017 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ public class BasicPersistentEntity<T, P extends PersistentProperty<P>> implement
 		this.comparator = comparator;
 		this.constructor = new PreferredConstructorDiscoverer<>(this).getConstructor();
 		this.associations = comparator.<Set<Association<P>>>map(it -> new TreeSet<>(new AssociationComparator<>(it)))
-				.orElseGet(() -> new HashSet<>());
+				.orElseGet(HashSet::new);
 
 		this.propertyCache = new HashMap<>();
 		this.annotationCache = new HashMap<>();
@@ -118,7 +118,7 @@ public class BasicPersistentEntity<T, P extends PersistentProperty<P>> implement
 		this.typeAlias = Lazy.of(() -> Alias
 				.ofOptional(Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(getType(), TypeAlias.class))//
 						.map(TypeAlias::value)//
-						.filter(it -> StringUtils.hasText(it))));
+						.filter(StringUtils::hasText)));
 	}
 
 	/*
@@ -338,7 +338,7 @@ public class BasicPersistentEntity<T, P extends PersistentProperty<P>> implement
 
 		Assert.notNull(handler, "PropertyHandler must not be null!");
 
-		getPersistentProperties().forEach(it -> handler.doWithPersistentProperty(it));
+		getPersistentProperties().forEach(handler::doWithPersistentProperty);
 	}
 
 	/*
@@ -350,7 +350,7 @@ public class BasicPersistentEntity<T, P extends PersistentProperty<P>> implement
 
 		Assert.notNull(handler, "Handler must not be null!");
 
-		getPersistentProperties().forEach(it -> handler.doWithPersistentProperty(it));
+		getPersistentProperties().forEach(handler::doWithPersistentProperty);
 	}
 
 	/*
@@ -416,7 +416,7 @@ public class BasicPersistentEntity<T, P extends PersistentProperty<P>> implement
 	 * @see org.springframework.data.mapping.MutablePersistentEntity#verify()
 	 */
 	public void verify() {
-		comparator.ifPresent(it -> Collections.sort(properties, it));
+		comparator.ifPresent(it -> properties.sort(it));
 	}
 
 	/*

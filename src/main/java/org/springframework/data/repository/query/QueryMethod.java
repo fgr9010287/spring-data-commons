@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2015 the original author or authors.
+ * Copyright 2008-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.ReflectionUtils;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 /**
@@ -39,6 +40,7 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class QueryMethod {
 
@@ -88,7 +90,7 @@ public class QueryMethod {
 			}
 		}
 
-		Assert.notNull(this.parameters, String.format("Parameters extracted from method '%s' must not be null!", method.getName()));
+		Assert.notNull(this.parameters, () -> String.format("Parameters extracted from method '%s' must not be null!", method.getName()));
 
 		if (isPageQuery()) {
 			Assert.isTrue(this.parameters.hasPageableParameter(),
@@ -248,7 +250,7 @@ public class QueryMethod {
 
 		if (QueryExecutionConverters.supports(method.getReturnType())) {
 			// unwrap only one level to handle cases like Future<List<Entity>> correctly.
-			return ClassTypeInformation.fromReturnTypeOf(method).getComponentType().map(it -> it.getType())
+			return ClassTypeInformation.fromReturnTypeOf(method).getComponentType().map(TypeInformation::getType)
 					.orElseThrow(() -> new IllegalStateException(
 							String.format("Couldn't find component type for return value of method %s!", method)));
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.springframework.core.convert.converter.Converter;
  * Converter implementations to map from and to Javaslang collections.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.13
  */
 class JavaslangCollections {
@@ -130,7 +131,7 @@ class JavaslangCollections {
 
 		static {
 
-			Set<ConvertiblePair> pairs = new HashSet<ConvertiblePair>();
+			Set<ConvertiblePair> pairs = new HashSet<>();
 			pairs.add(new ConvertiblePair(Collection.class, javaslang.collection.Traversable.class));
 			pairs.add(new ConvertiblePair(Map.class, javaslang.collection.Traversable.class));
 
