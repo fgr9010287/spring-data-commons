@@ -1,4 +1,4 @@
-package org.springframework.data;
+package org.springframework.data.classloadersupport;
 
 
 import static java.util.Arrays.*;

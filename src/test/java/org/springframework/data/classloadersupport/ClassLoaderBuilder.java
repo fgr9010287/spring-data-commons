@@ -1,9 +1,11 @@
-package org.springframework.data;
+package org.springframework.data.classloadersupport;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
+import org.mockito.Mockito;
 
 /**
  * Created by jschauder on 14/02/2017.
@@ -33,8 +35,6 @@ public class ClassLoaderBuilder<S> {
 			classLoader.excludeClass(owner.getClass().getName());
 
 			Class<?> callableClass = classLoader.loadClass(callable.getClass().getName());
-			Constructor<?>[] constructors = callableClass.getConstructors();
-			System.out.println(Arrays.asList(constructors));
 			Constructor<?> constructor = callableClass.getDeclaredConstructor(owner.getClass());
 			constructor.setAccessible(true);
 			Object reloadedCallable = constructor.newInstance(owner);
@@ -51,9 +51,14 @@ public class ClassLoaderBuilder<S> {
 
 	public S create(){
 		try {
-
-
-			return classToLoad.newInstance();
+			FilteringClassLoader classLoader = new FilteringClassLoader(hidden);
+			Class<?> loadedClass = classLoader.loadClass(classToLoad.getName());
+			Constructor<?>[] declaredConstructors = loadedClass.getDeclaredConstructors();
+			System.out.println(declaredConstructors);
+			Constructor<?> constructor = loadedClass.getDeclaredConstructor();
+			constructor.setAccessible(true);
+			Object instance = constructor.newInstance();
+			return Mockito.mock(classToLoad, new ProxyAnswer(instance));
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {

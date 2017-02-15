@@ -1,4 +1,4 @@
-package org.springframework.data;
+package org.springframework.data.classloadersupport;
 
 import java.net.URLClassLoader;
 import org.springframework.instrument.classloading.ShadowingClassLoader;
