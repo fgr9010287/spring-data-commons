@@ -36,7 +36,7 @@ import org.springframework.core.io.ResourceLoader;
  */
 public class ClassLoaderRule implements MethodRule {
 
-	private FilteringClassLoader classLoader;
+	public FilteringClassLoader classLoader;
 	private ClassLoader originalContextClassLoader;
 
 	@Override
