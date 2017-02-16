@@ -22,10 +22,10 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.mockito.Mockito;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.ResourceLoader;
 
@@ -38,13 +38,15 @@ public class ClassLoaderRule implements MethodRule {
 
 	public FilteringClassLoader classLoader;
 	private ClassLoader originalContextClassLoader;
+	private Object testInstance;
 
 	@Override
 	public Statement apply(final Statement base, FrameworkMethod method, Object target) {
 		ClassLoaderConfiguration methodAnnotation = method.getAnnotation(ClassLoaderConfiguration.class);
 		ClassLoaderConfiguration classAnnotation = method.getDeclaringClass().getAnnotation(ClassLoaderConfiguration.class);
 		CombinedClassLoaderConfiguration combinedConfiguration = new CombinedClassLoaderConfiguration(methodAnnotation, classAnnotation);
-		classLoader = createClassLoader(combinedConfiguration);
+		testInstance = target;
+		classLoader = createClassLoader(combinedConfiguration, testInstance.getClass());
 		originalContextClassLoader = Thread.currentThread().getContextClassLoader();
 
 		return new Statement() {
@@ -75,17 +77,33 @@ public class ClassLoaderRule implements MethodRule {
 		if (instance instanceof ResourceLoaderAware) {
 			ResourceLoader resourceLoader = mock(ResourceLoader.class);
 			when(resourceLoader.getClassLoader()).thenReturn(classLoader);
-			((ResourceLoaderAware)instance).setResourceLoader(resourceLoader);
+			((ResourceLoaderAware) instance).setResourceLoader(resourceLoader);
 		}
 	}
 
 	private <T> T createClass(Class<T> classToCreate) {
+
+		Object instance = createInstance(classToCreate);
+
+		return mock(classToCreate, new ProxyAnswer(instance));
+	}
+
+	private <T> Object createInstance(Class<T> classToCreate) {
 		try {
 			Class<?> loadedClass = classLoader.loadClass(classToCreate.getName());
-			Constructor<?> constructor = loadedClass.getDeclaredConstructor();
-			constructor.setAccessible(true);
-			Object instance = constructor.newInstance();
-			return mock(classToCreate, new ProxyAnswer(instance));
+
+			Object instance;
+			try {
+				Constructor<?> constructor = loadedClass.getDeclaredConstructor();
+				constructor.setAccessible(true);
+				instance = constructor.newInstance();
+			} catch (NoSuchMethodException nsme) {
+				Constructor<?>[] declaredConstructors = loadedClass.getDeclaredConstructors();
+				Constructor<?> constructor = loadedClass.getDeclaredConstructor(testInstance.getClass());
+				constructor.setAccessible(true);
+				instance = constructor.newInstance(testInstance);
+			}
+			return instance;
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
@@ -93,10 +111,21 @@ public class ClassLoaderRule implements MethodRule {
 		}
 	}
 
+	public <T> T call(Callable<T> callable) {
+		try {
+			return ((Callable<T>) createInstance(callable.getClass())).call();
+		} catch (RuntimeException re){
+			throw re;
+		} catch (Exception ex){
+			throw new RuntimeException(ex);
+		}
+	}
 
-	private static FilteringClassLoader createClassLoader(CombinedClassLoaderConfiguration configuration) {
+
+	private static FilteringClassLoader createClassLoader(CombinedClassLoaderConfiguration configuration, Class<?> testClass) {
 
 		FilteringClassLoader classLoader = new FilteringClassLoader(mergeHidden(configuration));
+		classLoader.excludeClass(testClass.getName());
 		for (Class aClass : configuration.dontShadow) {
 			classLoader.excludeClass(aClass.getName());
 		}

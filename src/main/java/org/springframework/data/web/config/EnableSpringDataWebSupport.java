@@ -85,8 +85,8 @@ public @interface EnableSpringDataWebSupport {
 			implements ImportSelector, EnvironmentAware, ResourceLoaderAware {
 
 		// Don't make final to allow test cases faking this to false
-		private static boolean HATEOAS_PRESENT = ClassUtils.isPresent("org.springframework.hateoas.Link", null);
-		private static boolean JACKSON_PRESENT = ClassUtils.isPresent("com.fasterxml.jackson.databind.ObjectMapper", null);
+		private static final boolean HATEOAS_PRESENT = ClassUtils.isPresent("org.springframework.hateoas.Link", null);
+		private static final boolean JACKSON_PRESENT = ClassUtils.isPresent("com.fasterxml.jackson.databind.ObjectMapper", null);
 
 		private Environment environment;
 		private ResourceLoader resourceLoader;

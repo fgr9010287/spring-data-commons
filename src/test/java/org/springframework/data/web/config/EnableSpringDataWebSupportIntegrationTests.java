@@ -24,14 +24,19 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.hamcrest.Matcher;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.classloadersupport.ClassLoaderConfiguration;
+import org.springframework.data.classloadersupport.ClassLoaderRule;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
@@ -39,6 +44,7 @@ import org.springframework.data.web.PagedResourcesAssemblerArgumentResolver;
 import org.springframework.data.web.SortHandlerMethodArgumentResolver;
 import org.springframework.data.web.WebTestUtils;
 import org.springframework.data.web.config.EnableSpringDataWebSupport.SpringDataWebConfigurationImportSelector;
+import org.springframework.hateoas.Link;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.ReflectionUtils;
@@ -52,7 +58,17 @@ import org.springframework.web.util.UriComponentsBuilder;
  * Integration tests for {@link EnableSpringDataWebSupport}.
  * 
  * @author Oliver Gierke
+ * @author Jens Schauder
  */
+@ClassLoaderConfiguration(dontShadowPackages = {
+		// could possibly simplified by specifying the packages that actually should get shadowed
+		org.springframework.beans.BeanInfoFactory.class,
+		org.springframework.core.AliasRegistry.class,
+		org.springframework.asm.Type.class,
+		org.springframework.util.StringValueResolver.class,
+		org.springframework.context.ApplicationContext.class,
+		org.springframework.mock.web.MockServletContext.class,
+})
 public class EnableSpringDataWebSupportIntegrationTests {
 
 	private static final String HATEOAS = "HATEOAS_PRESENT";
@@ -68,11 +84,8 @@ public class EnableSpringDataWebSupportIntegrationTests {
 		}
 	}
 
-	@After
-	public void tearDown() {
-		reEnable(HATEOAS);
-		reEnable(JACKSON);
-	}
+	@Rule public ClassLoaderRule classLoaderRule = new ClassLoaderRule();
+
 
 	@Test // DATACMNS-330
 	public void registersBasicBeanDefinitions() throws Exception {
@@ -97,11 +110,15 @@ public class EnableSpringDataWebSupportIntegrationTests {
 	}
 
 	@Test // DATACMNS-330
+	@ClassLoaderConfiguration(hide= Link.class)
 	public void doesNotRegisterHateoasSpecificComponentsIfHateoasNotPresent() throws Exception {
+		ApplicationContext context = classLoaderRule.call(new Callable<ApplicationContext>() {
+			@Override
+			public ApplicationContext call() throws Exception {
+				return WebTestUtils.createApplicationContext(SampleConfig.class);
+			}
+		});
 
-		hide(HATEOAS);
-
-		ApplicationContext context = WebTestUtils.createApplicationContext(SampleConfig.class);
 		List<String> names = Arrays.asList(context.getBeanDefinitionNames());
 
 		assertThat(names, hasItems("pageableResolver", "sortResolver"));
@@ -118,11 +135,15 @@ public class EnableSpringDataWebSupportIntegrationTests {
 	}
 
 	@Test // DATACMNS-475
+	@ClassLoaderConfiguration( hide=com.fasterxml.jackson.databind.ObjectMapper.class)
 	public void doesNotRegisterJacksonSpecificComponentsIfJacksonNotPresent() throws Exception {
 
-		hide(JACKSON);
-
-		ApplicationContext context = WebTestUtils.createApplicationContext(SampleConfig.class);
+		ApplicationContext context = classLoaderRule.call(new Callable<ApplicationContext>() {
+			@Override
+			public ApplicationContext call() throws Exception {
+				return WebTestUtils.createApplicationContext(SampleConfig.class);
+			}
+		});
 		List<String> names = Arrays.asList(context.getBeanDefinitionNames());
 
 		assertThat(names, not(hasItem("jacksonGeoModule")));

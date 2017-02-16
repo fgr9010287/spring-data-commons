@@ -18,22 +18,17 @@ package org.springframework.data.web.config;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import org.hamcrest.Matcher;
 import org.junit.Rule;
 import org.junit.Test;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.data.classloadersupport.ClassLoaderConfiguration;
 import org.springframework.data.classloadersupport.ClassLoaderRule;
 import org.springframework.data.web.ProjectingJackson2HttpMessageConverter;
 import org.springframework.data.web.XmlBeamHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.instrument.classloading.ShadowingClassLoader;
 
 /**
  * Integration test for {@link SpringDataWebConfiguration}.
