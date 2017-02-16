@@ -18,6 +18,7 @@ package org.springframework.data.classloadersupport;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import org.mockito.Mockito;
@@ -90,7 +91,7 @@ public class ClassLoaderBuilder<S> {
 	}
 
 	private FilteringClassLoader createClassLoader() {
-		classLoader = new FilteringClassLoader(hidden);
+		classLoader = new FilteringClassLoader(Collections.singleton(hidden));
 		for (String excludedClassName : excludedClassNames) {
 			classLoader.excludeClass(excludedClassName);
 		}

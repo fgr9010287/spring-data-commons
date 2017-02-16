@@ -16,6 +16,7 @@
 package org.springframework.data.classloadersupport;
 
 import java.net.URLClassLoader;
+import java.util.Collection;
 import org.springframework.instrument.classloading.ShadowingClassLoader;
 
 /**
@@ -26,7 +27,7 @@ import org.springframework.instrument.classloading.ShadowingClassLoader;
  * {@link #excludePackage(String)} or {@link ShadowingClassLoader#DEFAULT_EXCLUDED_PACKAGES}.
  * They get loaded by {@link ShadowingClassLoader#}</li>
  *
- * <li>those in {@link #hiddenPackage}, which will not get loaded at all</li>
+ * <li>those in {@link #hidden}, which will not get loaded at all</li>
  *
  * </ul>
  *
@@ -36,30 +37,32 @@ import org.springframework.instrument.classloading.ShadowingClassLoader;
  */
 public class FilteringClassLoader extends ShadowingClassLoader {
 
-	private final String hiddenPackage;
+	private final Collection<String> hidden;
 
-	public FilteringClassLoader(String hiddenPackage) {
+	public FilteringClassLoader(Collection<String> hidden) {
 		super(URLClassLoader.getSystemClassLoader());
-		this.hiddenPackage = hiddenPackage;
+		this.hidden = hidden;
 	}
 
 	@Override
 	public Class<?> loadClass(String name) throws ClassNotFoundException {
 
-		if (name.startsWith(hiddenPackage)) {
-			throw new ClassNotFoundException();
-		}
-
+		checkIfHidden(name);
 		return super.loadClass(name);
 	}
 
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
 
-		if (name.startsWith(hiddenPackage)) {
-			throw new ClassNotFoundException();
-		}
-
+		checkIfHidden(name);
 		return super.findClass(name);
+	}
+
+	private void checkIfHidden(String name) throws ClassNotFoundException {
+		for (String prefix : hidden) {
+			if (name.startsWith(prefix)) {
+				throw new ClassNotFoundException();
+			}
+		}
 	}
 }
